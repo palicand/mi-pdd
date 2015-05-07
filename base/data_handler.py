@@ -38,9 +38,11 @@ def to_dataframe(spectra_list):
     columns = spectra_list[0]['header']
     # columns.append('label')
     data = [spectrum['data'] for spectrum in spectra_list]
-    classes = [spectrum['class'] for spectrum in spectra_list]
     spectra_df = pd.DataFrame(data=data, columns=columns, index=index)
-    spectra_df.insert(len(spectra_df.columns), 'class', classes)
+    if('class' in spectra_list[0]):
+        classes = [spectrum['class'] for spectrum in spectra_list]
+        spectra_df.insert(len(spectra_df.columns), 'class', classes)
+    print(spectra_df)
     return spectra_df
 
 
@@ -141,15 +143,7 @@ def _parse_all_fits(uri):
     current_class = None
     #features = 1997
     for root, dirs, files in os.walk(uri):
-        base = os.path.basename(root)
-        # print(base)
-        if (root == uri):
-            classes = dirs
-        elif (base in classes):
-            current_class = base
-        fits_files = [file for file in files if file.endswith('.fits')]
-        if len(fits_files) > 0:
-            idx = random.randint(0, len(fits_files) - 1)
+        if len(files) > 0:
             #for fi in enumerate(files):
             #    if idx == fi.endswith('.fits'):
             #        fits_data = _parse_fits(os.path.join(root, fi))
@@ -161,13 +155,16 @@ def _parse_all_fits(uri):
             #        fits['class'] = current_class
             #        #pprint.pprint(fits[-1])
             #        parsed_fits.append(fits)
-            fi = fits_files[idx]
-            fits_data = _parse_fits(os.path.join(root, fi))
-            if len(fits_data) != 1997:
-                print(fi)
-            fits = {'data': fits_data, 'id': fi[0:-5], 'class': current_class}
-            #pprint.pprint(fits[-1])
-            parsed_fits.append(fits)
+            for fi in enumerate(files):
+                try:
+                    fits_data = _parse_fits(os.path.join(root,fi[1]))
+                    fits = {}
+                    fits['data'] = fits_data
+                    fits['id'] = fi[1][0:-5]
+                    fits['class'] = -1
+                    parsed_fits.append(fits)
+                except Exception as e:
+                    print("Exception " + str(e) + ' for ' + str(fi))
     # pprint.pprint(parsed_fits)
     return parsed_fits
 

@@ -29,6 +29,7 @@ def run_preprocessing(input_file):
                                   normalize=normalize,
                                   binning=do_binning,
                                   remove_duplicates=remove_duplicates))
+    print(processed_df)
     if 'select_features' in json_dict:
         select_features_dict = json_dict['select_features']
         processed_df, scores = dh.select_features(processed_df,
@@ -41,11 +42,7 @@ def run_preprocessing(input_file):
                                     iterations=decompose_dict['iterations'] if
                                     'iterations' in decompose_dict else 300,
                                     kind=decompose_dict['kind'])
-    try:
-        os.mkdir("./out")
-    except:
-        pass
-    processed_df.to_csv("./out/" + json_dict['out_file'], header=True, index=True, index_label='id')
+    processed_df.to_csv("./" + json_dict['out_file'], header=True, index=True, index_label='id')
 
 if __name__ == '__main__':
     main()
