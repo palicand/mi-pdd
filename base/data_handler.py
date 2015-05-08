@@ -22,8 +22,6 @@ def process_set(spectra, normalize=True, binning=True, remove_duplicates=True, d
         spectra = _binning(spectra)
     if normalize:
         _normalize(spectra)
-    # csv_name = 'processed.csv'
-    #_write_fits_csv(spectra, csv_name)
     return spectra
 
 
@@ -33,16 +31,15 @@ def load_set(uri, format='csv', header=False, delimiter=','):
                        skipinitialspace=True)
 
 
-def to_dataframe(spectra_list):
-    index = [spectrum['id'] for spectrum in spectra_list]
+def to_dataframe(spectra_list, class_dict=None):
+    indices = [spectrum['id'] for spectrum in spectra_list]
     columns = spectra_list[0]['header']
     # columns.append('label')
     data = [spectrum['data'] for spectrum in spectra_list]
-    spectra_df = pd.DataFrame(data=data, columns=columns, index=index)
-    if('class' in spectra_list[0]):
-        classes = [spectrum['class'] for spectrum in spectra_list]
+    spectra_df = pd.DataFrame(data=data, columns=columns, index=indices)
+    if class_dict is not None:
+        classes = [class_dict[index] for index in indices]
         spectra_df.insert(len(spectra_df.columns), 'class', classes)
-    print(spectra_df)
     return spectra_df
 
 
@@ -102,7 +99,6 @@ def _binning(fits_list):
         binned_dictionary = {}
         binned_dictionary['data'] = binned_data
         binned_dictionary['id'] = fits['id']
-        binned_dictionary['class'] = fits['class']
         binned_dictionary['header'] = binned_header
         result.append(binned_dictionary)
     return result
@@ -115,26 +111,6 @@ def _normalize(fits_list, norm='l2'):
     preprocessed_data = preprocessing.normalize(data_list, norm=norm)
     for idx, item in enumerate(preprocessed_data):
         fits_list[idx]['data'] = item
-
-
-def _write_fits_csv(fits_list, name):
-    csv_file = io.open(name, mode='w', encoding="utf-8")
-    csv_file.write('id,')
-    for record in fits_list[0]['data']:
-        csv_file.write(str(record[0]))
-        csv_file.write(',')
-    csv_file.write('class\n')
-    for fits in fits_list:
-        # print(fits)
-        csv_file.write(fits['id'])
-        csv_file.write(',')
-        for record in fits['data']:
-            #print(str(record[1]))
-            csv_file.write(str(record[1]))
-            csv_file.write(',')
-        csv_file.write(fits['class'])
-        csv_file.write('\n')
-    csv_file.close()
 
 
 def _parse_all_fits(uri):
@@ -161,7 +137,6 @@ def _parse_all_fits(uri):
                     fits = {}
                     fits['data'] = fits_data
                     fits['id'] = fi[1][0:-5]
-                    fits['class'] = -1
                     parsed_fits.append(fits)
                 except Exception as e:
                     print("Exception " + str(e) + ' for ' + str(fi))

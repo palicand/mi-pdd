@@ -2,6 +2,8 @@ import sys
 import os
 import json
 import base.data_handler as dh
+
+
 def main():
     if len(sys.argv) < 2:
         raise ValueError('Must pass at least one input file')
@@ -11,7 +13,6 @@ def main():
 
 def run_preprocessing(input_file):
     json_dict = None
-    spectra_df = None
     normalize = do_binning = remove_duplicates = False
     with open(input_file, 'r') as f:
         json_dict = json.load(f)
@@ -26,9 +27,10 @@ def run_preprocessing(input_file):
     if 'remove_duplicates' in json_dict:
         remove_duplicates = json_dict['remove_duplicates']
     processed_df = dh.to_dataframe(dh.process_set(spectra_list,
-                                  normalize=normalize,
-                                  binning=do_binning,
-                                  remove_duplicates=remove_duplicates))
+                                                  normalize=normalize,
+                                                  binning=do_binning,
+                                                  remove_duplicates=remove_duplicates),
+                                   class_dict=json_dict['classes'] if 'classes' in json_dict else None)
     print(processed_df)
     if 'select_features' in json_dict:
         select_features_dict = json_dict['select_features']
@@ -43,6 +45,7 @@ def run_preprocessing(input_file):
                                     'iterations' in decompose_dict else 300,
                                     kind=decompose_dict['kind'])
     processed_df.to_csv("./" + json_dict['out_file'], header=True, index=True, index_label='id')
+
 
 if __name__ == '__main__':
     main()
